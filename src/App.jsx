@@ -10,9 +10,238 @@ const App = () => {
   const [recruiterName, setRecruiterName] = useState('');
   const [resume, setResume] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [jobUrl, setJobUrl] = useState('');
+  const [useJobUrl, setUseJobUrl] = useState(false);
   const [linkedinMessage, setLinkedinMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isScrapingJob, setIsScrapingJob] = useState(false);
   const [error, setError] = useState('');
+
+  // Function to scrape job details from a URL using scrape.do API
+  const scrapeJobDetails = async () => {
+    if (!jobUrl.trim()) {
+      setError('Please enter a valid job URL');
+      return;
+    }
+
+    setIsScrapingJob(true);
+    setError('');
+
+    try {
+      // The scrape.do API token is provided by the developer
+      const scrapeApiToken = "f17f8292f3744621a92bb83dd9f8921d9715873253d"; // Replace with your actual token
+      
+      // Use scrape.do API for better scraping capabilities
+      const scrapeApiUrl = `https://api.scrape.do/?token=${encodeURIComponent(scrapeApiToken)}&url=${encodeURIComponent(jobUrl)}`;
+      
+      const response = await fetch(scrapeApiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid API token. Please check your scrape.do token.');
+        } else if (response.status === 403) {
+          throw new Error('Access denied. Please check your scrape.do subscription.');
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.');
+        }
+        throw new Error(`Failed to fetch job page: ${response.status} ${response.statusText}`);
+      }
+
+      const htmlContent = await response.text();
+
+      // Parse the HTML to extract job details
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, 'text/html');
+
+      // Extract job description using comprehensive selectors for various job sites
+      let extractedJobDescription = '';
+      let extractedCompany = '';
+      let extractedRole = '';
+      
+      // Enhanced selectors for popular job sites
+      const jobDescriptionSelectors = [
+        // LinkedIn
+        '.description__text',
+        '.jobs-description-content__text',
+        '.jobs-description__container',
+        
+        // Indeed
+        '.jobsearch-jobDescriptionText',
+        '#jobDescriptionText',
+        '.jobsearch-JobComponent-description',
+        
+        // Glassdoor
+        '.jobDescriptionContent',
+        '[data-test="jobDescription"]',
+        
+        // AngelList/Wellfound
+        '[data-test-id="job-description"]',
+        '.job-description',
+        
+        // Monster
+        '.job-description-container',
+        
+        // ZipRecruiter
+        '.job_description',
+        
+        // Generic selectors
+        '[data-testid="job-description"]',
+        '[data-test="job-description"]',
+        '.job-details',
+        '.job-content',
+        '.description',
+        '[class*="description"]',
+        '[class*="job-details"]',
+        '.posting-description',
+        '.job-posting-description',
+        '.job-summary',
+        '.position-description',
+        
+        // Fallback selectors
+        'main [role="main"]',
+        'main',
+        'article',
+        '.content'
+      ];
+
+      // Try each selector until we find content
+      for (const selector of jobDescriptionSelectors) {
+        const element = doc.querySelector(selector);
+        if (element) {
+          const text = element.textContent || element.innerText || '';
+          if (text.length > 100) { // Only use if substantial content
+            extractedJobDescription = text;
+            break;
+          }
+        }
+      }
+
+      // Extract company name from various sources
+      const companySelectors = [
+        // LinkedIn
+        '.jobs-details-top-card__company-url',
+        '.job-details-jobs-unified-top-card__company-name',
+        
+        // Indeed
+        '.jobsearch-InlineCompanyRating',
+        '[data-testid="inlineHeader-companyName"]',
+        
+        // General
+        '[data-test="employer-name"]',
+        '.company-name',
+        '[class*="company"]',
+        'h1 + div',
+        'title'
+      ];
+
+      for (const selector of companySelectors) {
+        const element = doc.querySelector(selector);
+        if (element) {
+          const text = (element.textContent || element.innerText || '').trim();
+          if (text && !text.toLowerCase().includes('job') && text.length < 100) {
+            extractedCompany = text;
+            break;
+          }
+        }
+      }
+
+      // Extract role/title from various sources
+      const roleSelectors = [
+        // LinkedIn
+        '.jobs-details-top-card__job-title',
+        
+        // Indeed
+        '[data-testid="jobTitle"]',
+        '.jobsearch-JobInfoHeader-title',
+        
+        // General
+        'h1',
+        '.job-title',
+        '[class*="title"]',
+        '[data-test="job-title"]'
+      ];
+
+      for (const selector of roleSelectors) {
+        const element = doc.querySelector(selector);
+        if (element) {
+          const text = (element.textContent || element.innerText || '').trim();
+          if (text && text.length < 200) {
+            extractedRole = text;
+            break;
+          }
+        }
+      }
+
+      // Clean up the extracted text
+      if (extractedJobDescription) {
+        extractedJobDescription = extractedJobDescription
+          .replace(/\s+/g, ' ')
+          .replace(/\n\s*\n/g, '\n')
+          .trim();
+      }
+
+      // Set the extracted data
+      if (extractedJobDescription && extractedJobDescription.length > 100) {
+        setJobDescription(extractedJobDescription);
+        
+        // Auto-fill company name and role if not already filled and we extracted them
+        if (!companyName && extractedCompany) {
+          setCompanyName(extractedCompany);
+        }
+
+        if (!role && extractedRole) {
+          setRole(extractedRole);
+        }
+
+        setError('');
+      } else {
+        // If we couldn't extract much, try to get the page title at least
+        const titleElement = doc.querySelector('title');
+        const pageTitle = titleElement ? titleElement.textContent : '';
+        
+        if (pageTitle) {
+          // Extract info from page title as fallback
+          if (!companyName) {
+            const companyMatch = pageTitle.match(/at\s+([^|,-]+)/i);
+            if (companyMatch) {
+              setCompanyName(companyMatch[1].trim());
+            }
+          }
+
+          if (!role) {
+            const roleMatch = pageTitle.match(/^([^|,-]+)/);
+            if (roleMatch) {
+              setRole(roleMatch[1].trim());
+            }
+          }
+        }
+
+        setError('Could not extract detailed job description from the provided URL. The page structure might not be supported. Please try pasting the job description manually.');
+      }
+
+    } catch (err) {
+      console.error('Scraping error:', err);
+      setError(`Failed to scrape job details: ${err.message}`);
+    } finally {
+      setIsScrapingJob(false);
+    }
+  };
+
+  // Function to handle switching between job input methods
+  const handleInputMethodChange = (useUrl) => {
+    setUseJobUrl(useUrl);
+    if (useUrl !== useJobUrl) {
+      // Clear job-related fields when switching methods
+      setJobDescription('');
+      setJobUrl('');
+      setError('');
+    }
+  };
 
   // Function to handle the API call to the Gemini model with exponential backoff.
   const generateMessage = async () => {
@@ -215,27 +444,100 @@ const App = () => {
               ></textarea>
             </div>
             <div>
-              <label htmlFor="job-description-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Job Description
-              </label>
-              <textarea
-                id="job-description-input"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                rows="8"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the job description here..."
-              ></textarea>
+              <div className="flex items-center mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Job Information
+                </label>
+                <div className="ml-4 flex items-center space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="jobInputMethod"
+                      checked={!useJobUrl}
+                      onChange={() => handleInputMethodChange(false)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Manual Input</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="jobInputMethod"
+                      checked={useJobUrl}
+                      onChange={() => handleInputMethodChange(true)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Job URL</span>
+                  </label>
+                </div>
+              </div>
+
+              {useJobUrl ? (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="job-url-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Job URL
+                    </label>
+                    <input
+                      id="job-url-input"
+                      type="url"
+                      className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      value={jobUrl}
+                      onChange={(e) => setJobUrl(e.target.value)}
+                      placeholder="https://jobs.linkedin.com/... or https://indeed.com/..."
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Supports LinkedIn, Indeed, Glassdoor, and most major job sites
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={scrapeJobDetails}
+                    disabled={isScrapingJob || !jobUrl.trim()}
+                    className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:bg-green-700 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {isScrapingJob ? 'Extracting Job Details...' : 'Extract Job Details'}
+                  </button>
+                  {jobDescription && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Extracted Job Description (You can edit this)
+                      </label>
+                      <textarea
+                        className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        rows="6"
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        placeholder="Extracted job description will appear here..."
+                      ></textarea>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label htmlFor="job-description-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Job Description
+                  </label>
+                  <textarea
+                    id="job-description-input"
+                    className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    rows="8"
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the job description here..."
+                  ></textarea>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <button
           onClick={generateMessage}
-          disabled={isLoading || !userName || !currentCompany || !companyName || !role || !recruiterName || !resume || !jobDescription}
+          disabled={isLoading || isScrapingJob || !userName || !currentCompany || !companyName || !role || !recruiterName || !resume || !jobDescription}
           className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Drafting...' : 'Draft Personalized LinkedIn Message'}
+          {isLoading ? 'Drafting...' : isScrapingJob ? 'Extracting Job Details...' : 'Draft Personalized LinkedIn Message'}
         </button>
 
         {/* Display the output or error messages */}
