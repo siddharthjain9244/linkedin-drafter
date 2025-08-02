@@ -335,17 +335,51 @@ const App = () => {
 
   // The UI of the application.
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-4xl w-full">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-gray-50">
-          LinkedIn Message Drafter
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-6 font-sans relative overflow-hidden">
+      {/* Enhanced Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-full blur-2xl animate-bounce" style={{animationDuration: '3s'}}></div>
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-br from-purple-500/40 to-pink-500/40 rounded-full blur-xl animate-bounce" style={{animationDelay: '1s', animationDuration: '4s'}}></div>
+        <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-indigo-500/35 to-cyan-500/35 rounded-full blur-xl animate-bounce" style={{animationDelay: '2s', animationDuration: '5s'}}></div>
+        <div className="absolute top-1/3 left-1/4 w-40 h-40 bg-gradient-to-br from-yellow-400/25 to-orange-400/25 rounded-full blur-lg animate-pulse" style={{animationDelay: '1.5s'}}></div>
+        <div className="absolute bottom-1/3 right-1/3 w-48 h-48 bg-gradient-to-br from-emerald-400/30 to-teal-400/30 rounded-full blur-xl animate-pulse" style={{animationDelay: '3s'}}></div>
+      </div>
+      <div className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-xl shadow-2xl rounded-3xl p-4 max-w-5xl w-full border border-white/10 dark:border-gray-700/20 mx-2 my-2 overflow-hidden hover:shadow-3xl hover:bg-white/85 dark:hover:bg-gray-800/95 transition-all duration-500 relative z-10">
+        {/* Clean Centered Header */}
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-5 mb-6 text-white text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/10 rounded-2xl"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl mr-3 shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white leading-tight">
+                  LinkedIn Message Drafter
+                </h1>
+                <p className="text-white/90 text-2xl mt-2 font-medium">
+                  ✨ AI-powered professional messages that get responses
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Personal Information */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-            Your Information
-          </h2>
+        <div className="mb-6 p-5 bg-gray-50/50 dark:bg-gray-700/20 rounded-2xl border border-gray-100/60 dark:border-gray-500/15 hover:bg-gray-50/70 dark:hover:bg-gray-700/30 transition-all duration-300">
+          <div className="flex items-center mb-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg mr-3 shadow-md">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Your Information</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Tell us about yourself</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="user-name-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -354,7 +388,7 @@ const App = () => {
               <input
                 id="user-name-input"
                 type="text"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 placeholder="e.g., John Smith"
@@ -367,7 +401,7 @@ const App = () => {
               <input
                 id="current-company-input"
                 type="text"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                 value={currentCompany}
                 onChange={(e) => setCurrentCompany(e.target.value)}
                 placeholder="e.g., Apple, Amazon, Startup Inc..."
@@ -377,10 +411,19 @@ const App = () => {
         </div>
 
         {/* Target Information */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-            Target Opportunity
-          </h2>
+        <div className="mb-6 p-5 bg-gray-50/50 dark:bg-gray-700/20 rounded-2xl border border-gray-100/60 dark:border-gray-500/15 hover:bg-gray-50/70 dark:hover:bg-gray-700/30 transition-all duration-300">
+          <div className="flex items-center mb-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg mr-3 shadow-md">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Target Opportunity</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Details about your dream job</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="company-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -389,7 +432,7 @@ const App = () => {
               <input
                 id="company-input"
                 type="text"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g., Google, Microsoft..."
@@ -402,7 +445,7 @@ const App = () => {
               <input
                 id="role-input"
                 type="text"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 placeholder="e.g., Software Engineer..."
@@ -415,7 +458,7 @@ const App = () => {
               <input
                 id="recruiter-name-input"
                 type="text"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                 value={recruiterName}
                 onChange={(e) => setRecruiterName(e.target.value)}
                 placeholder="e.g., Sarah Johnson"
@@ -425,10 +468,18 @@ const App = () => {
         </div>
 
         {/* Content Information */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-            Content & Requirements
-          </h2>
+        <div className="mb-6 p-5 bg-gray-50/50 dark:bg-gray-700/20 rounded-2xl border border-gray-100/60 dark:border-gray-500/15 hover:bg-gray-50/70 dark:hover:bg-gray-700/30 transition-all duration-300">
+          <div className="flex items-center mb-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mr-3 shadow-md">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Content & Requirements</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Your resume and job details</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="resume-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -436,38 +487,38 @@ const App = () => {
               </label>
               <textarea
                 id="resume-input"
-                className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                rows="8"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm resize-none"
+                rows="10"
                 value={resume}
                 onChange={(e) => setResume(e.target.value)}
                 placeholder="Paste your resume here..."
               ></textarea>
             </div>
             <div>
-              <div className="flex items-center mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Job Information
+              <div className="mb-6 p-4 bg-white/60 dark:bg-gray-600/20 rounded-xl border border-gray-100/50 dark:border-gray-600/20">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                  Job Information Method
                 </label>
-                <div className="ml-4 flex items-center space-x-4">
-                  <label className="flex items-center">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <label className="flex items-center p-3 rounded-lg border border-gray-100 dark:border-gray-600/30 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200">
                     <input
                       type="radio"
                       name="jobInputMethod"
                       checked={!useJobUrl}
                       onChange={() => handleInputMethodChange(false)}
-                      className="mr-2"
+                      className="mr-3 text-blue-600"
                     />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Manual Input</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Manual Input</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center p-3 rounded-lg border border-gray-100 dark:border-gray-600/30 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200">
                     <input
                       type="radio"
                       name="jobInputMethod"
                       checked={useJobUrl}
                       onChange={() => handleInputMethodChange(true)}
-                      className="mr-2"
+                      className="mr-3 text-blue-600"
                     />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Job URL</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Job URL</span>
                   </label>
                 </div>
               </div>
@@ -481,7 +532,7 @@ const App = () => {
                     <input
                       id="job-url-input"
                       type="url"
-                      className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                       value={jobUrl}
                       onChange={(e) => setJobUrl(e.target.value)}
                       placeholder="https://jobs.linkedin.com/... or https://indeed.com/..."
@@ -494,7 +545,7 @@ const App = () => {
                     type="button"
                     onClick={scrapeJobDetails}
                     disabled={isScrapingJob || !jobUrl.trim()}
-                    className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:bg-green-700 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="w-full bg-green-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-green-700 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed transform hover:scale-[1.01]"
                   >
                     {isScrapingJob ? 'Extracting Job Details...' : 'Extract Job Details'}
                   </button>
@@ -503,13 +554,13 @@ const App = () => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Extracted Job Description (You can edit this)
                       </label>
-                      <textarea
-                        className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        rows="6"
-                        value={jobDescription}
-                        onChange={(e) => setJobDescription(e.target.value)}
-                        placeholder="Extracted job description will appear here..."
-                      ></textarea>
+                                             <textarea
+                         className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm resize-none"
+                         rows="8"
+                         value={jobDescription}
+                         onChange={(e) => setJobDescription(e.target.value)}
+                         placeholder="Extracted job description will appear here..."
+                       ></textarea>
                     </div>
                   )}
                 </div>
@@ -518,44 +569,73 @@ const App = () => {
                   <label htmlFor="job-description-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Job Description
                   </label>
-                  <textarea
-                    id="job-description-input"
-                    className="w-full p-3 rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    rows="8"
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    placeholder="Paste the job description here..."
-                  ></textarea>
+                                     <textarea
+                     id="job-description-input"
+                     className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm resize-none"
+                     rows="10"
+                     value={jobDescription}
+                     onChange={(e) => setJobDescription(e.target.value)}
+                     placeholder="Paste the job description here..."
+                   ></textarea>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <button
-          onClick={generateMessage}
-          disabled={isLoading || isScrapingJob || !userName || !currentCompany || !companyName || !role || !recruiterName || !resume || !jobDescription}
-          className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Drafting...' : isScrapingJob ? 'Extracting Job Details...' : 'Draft Personalized LinkedIn Message'}
-        </button>
+        <div className="mt-8 mb-8">
+          <button
+            onClick={generateMessage}
+            disabled={isLoading || isScrapingJob || !userName || !currentCompany || !companyName || !role || !recruiterName || !resume || !jobDescription}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-5 px-8 rounded-2xl shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:transform-none"
+          >
+            {isLoading ? 'Drafting...' : isScrapingJob ? 'Extracting Job Details...' : '✨ Draft Personalized LinkedIn Message'}
+          </button>
+        </div>
 
         {/* Display the output or error messages */}
-        <div className="mt-8">
+        <div className="space-y-6">
           {error && (
-            <div className="bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200 p-4 rounded-xl shadow-inner text-center">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-700/30 text-red-700 dark:text-red-200 p-6 rounded-2xl shadow-lg text-center">
+              <div className="flex items-center justify-center mb-2">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L4.17 14.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="font-semibold">Error</span>
+              </div>
               {error}
             </div>
           )}
 
           {linkedinMessage && (
-            <div className="bg-green-50 dark:bg-green-900 p-6 rounded-2xl shadow-inner border border-green-200 dark:border-green-700 transition-all duration-300">
-              <h2 className="text-xl font-semibold mb-3 text-green-800 dark:text-green-200">
-                Generated Message
-              </h2>
-              <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200 font-sans leading-relaxed">
-                {linkedinMessage}
-              </pre>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200/60 dark:border-green-700/30 p-8 rounded-3xl shadow-2xl transition-all duration-300">
+              <div className="flex items-center mb-4">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-xl mr-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-green-800 dark:text-green-200">
+                    🎉 Your LinkedIn Message is Ready!
+                  </h2>
+                  <p className="text-green-600 dark:text-green-300 text-sm">Copy and use this personalized message</p>
+                </div>
+              </div>
+              <div className="relative bg-white/80 dark:bg-gray-800/80 p-6 rounded-2xl border border-green-100/40 dark:border-green-600/20">
+                <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200 font-sans leading-relaxed text-base">
+                  {linkedinMessage}
+                </pre>
+                <button
+                  onClick={() => navigator.clipboard.writeText(linkedinMessage)}
+                  className="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
+                  title="Copy to clipboard"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
         </div>
