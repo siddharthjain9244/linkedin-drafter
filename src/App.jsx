@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 // The main App component for our LinkedIn message drafter.
 const App = () => {
@@ -16,6 +16,21 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isScrapingJob, setIsScrapingJob] = useState(false);
   const [error, setError] = useState('');
+  const [isCopied, setIsCopied] = useState(false); // New state for copy notification
+
+  // Get API keys from environment variables for security.
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const scrapeApiToken = import.meta.env.VITE_SCRAPE_API_TOKEN;
+
+  // Function to handle the copy to clipboard functionality
+  const handleCopy = () => {
+    navigator.clipboard.writeText(linkedinMessage);
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000); // Hide message after 2 seconds
+  };
+
 
   // Function to scrape job details from a URL using scrape.do API
   const scrapeJobDetails = async () => {
@@ -24,16 +39,18 @@ const App = () => {
       return;
     }
 
+    if (!scrapeApiToken) {
+      setError('Scrape.do API token is missing. Please set it in your environment variables.');
+      return;
+    }
+
     setIsScrapingJob(true);
     setError('');
 
     try {
-      // The scrape.do API token is provided by the developer
-      const scrapeApiToken = import.meta.env.VITE_SCRAPE_API_TOKEN; // Replace with your actual token
-      
       // Use scrape.do API for better scraping capabilities
       const scrapeApiUrl = `https://api.scrape.do/?token=${encodeURIComponent(scrapeApiToken)}&url=${encodeURIComponent(jobUrl)}`;
-      console.log("scrapeApiToken", scrapeApiToken);
+      
       const response = await fetch(scrapeApiUrl, {
         method: 'GET',
         headers: {
@@ -250,9 +267,15 @@ const App = () => {
     setError('');
     setIsLoading(true);
 
+    if (!geminiApiKey) {
+        setError('Gemini API key is missing. Please set it in your environment variables.');
+        setIsLoading(false);
+        return;
+    }
+
     // The prompt for the LLM, instructing it to act as a career advisor.
     const prompt = `
-      You are a career advisor. Draft a professional, concise, and engaging LinkedIn message from ${userName} (currently working at ${currentCompany}) to ${recruiterName} at ${companyName} for the ${role} position. The message should be polite, personalized, and directly reference how the candidate's experience and skills from their resume align with the requirements of the job description. Address the recruiter by name and mention the specific company name and role in the message. Do not make up any information. If you cannot find a direct match, write a general but polite message.
+      You are a career advisor. Draft a professional, concise, and engaging outreach message from ${userName} (currently working at ${currentCompany}) to ${recruiterName} at ${companyName} for the ${role} position. The message should be polite, personalized, and directly reference how the candidate's experience and skills from their resume align with the requirements of the job description. Address the recruiter by name and mention the specific company name and role in the message. Do not make up any information. If you cannot find a direct match, write a general but polite message.
 
       Candidate Name: ${userName}
       Current Company: ${currentCompany}
@@ -266,7 +289,7 @@ const App = () => {
       Job Description:
       ${jobDescription}
 
-      Draft the LinkedIn message below. The message should be ready to copy and paste and should start with a proper greeting to the recruiter.
+      Draft the outreach message below. The message should be ready to copy and paste and should start with a proper greeting to the recruiter.
     `;
 
     // API payload for the Gemini model.
@@ -277,14 +300,12 @@ const App = () => {
       }]
     };
     
-    // The API key is provided by the canvas environment.
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     // The API URL for the gemini-2.5-flash-preview-05-20 model.
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${geminiApiKey}`;
 
     let retries = 0;
     const maxRetries = 5;
-    let delay = 1000; // Start with 1 second delay.
+    let delay = 1000;
 
     while (retries < maxRetries) {
       try {
@@ -307,7 +328,6 @@ const App = () => {
 
         const result = await response.json();
         
-        // Extract the generated text from the API response.
         if (result.candidates && result.candidates.length > 0 &&
             result.candidates[0].content && result.candidates[0].content.parts &&
             result.candidates[0].content.parts.length > 0) {
@@ -333,7 +353,6 @@ const App = () => {
     setIsLoading(false);
   };
 
-  // The UI of the application.
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-6 font-sans relative overflow-hidden">
       {/* Enhanced Animated Background Elements */}
@@ -350,14 +369,14 @@ const App = () => {
           <div className="absolute inset-0 bg-black/10 rounded-2xl"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl mr-3 shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              {/* <div className="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl mr-3 shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-              </div>
+              </div> */}
               <div>
                 <h1 className="text-3xl font-bold text-white leading-tight">
-                  LinkedIn Message Drafter
+                  First Impression AI
                 </h1>
                 <p className="text-white/90 text-2xl mt-2 font-medium">
                   ✨ AI-powered professional messages that get responses
@@ -535,10 +554,10 @@ const App = () => {
                       className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                       value={jobUrl}
                       onChange={(e) => setJobUrl(e.target.value)}
-                      placeholder="https://jobs.linkedin.com/... or https://indeed.com/..."
+                      placeholder="https://indeed.com/..."
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Supports LinkedIn, Indeed, Glassdoor, and most major job sites
+                      Supports  Indeed, Glassdoor, and most major job sites
                     </p>
                   </div>
                   <button
@@ -589,7 +608,7 @@ const App = () => {
             disabled={isLoading || isScrapingJob || !userName || !currentCompany || !companyName || !role || !recruiterName || !resume || !jobDescription}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-5 px-8 rounded-2xl shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:transform-none"
           >
-            {isLoading ? 'Drafting...' : isScrapingJob ? 'Extracting Job Details...' : '✨ Draft Personalized LinkedIn Message'}
+            {isLoading ? 'Drafting...' : isScrapingJob ? 'Extracting Job Details...' : '✨ Generate My Outreach Message'}
           </button>
         </div>
 
@@ -617,7 +636,7 @@ const App = () => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-green-800 dark:text-green-200">
-                    🎉 Your LinkedIn Message is Ready!
+                    🎉 Your Outreach Message is Ready!
                   </h2>
                   <p className="text-green-600 dark:text-green-300 text-sm">Copy and use this personalized message</p>
                 </div>
@@ -627,13 +646,27 @@ const App = () => {
                   {linkedinMessage}
                 </pre>
                 <button
-                  onClick={() => navigator.clipboard.writeText(linkedinMessage)}
-                  className="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
-                  title="Copy to clipboard"
+                  // onClick={() => navigator.clipboard.writeText(linkedinMessage)}
+                  onClick={handleCopy}
+                  className={`absolute top-4 right-4 text-white p-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 ${
+                    isCopied 
+                      ? 'bg-green-600' 
+                      : 'bg-green-500 hover:bg-green-600'
+                  }`}
+                  title={isCopied ? "Copied!" : "Copy to clipboard"}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
+                  {isCopied ? (
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-xs font-medium">Copied!</span>
+                    </div>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
