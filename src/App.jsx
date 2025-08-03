@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 // The main App component for our LinkedIn message drafter.
 const App = () => {
@@ -19,9 +19,29 @@ const App = () => {
   const [error, setError] = useState('');
   const [isCopied, setIsCopied] = useState(false);
 
+  // A ref to the message output container for auto-scrolling.
+  const messageOutputRef = useRef(null);
+  // New ref for the main action button
+  const generateMessageButtonRef = useRef(null);
+
   // Get API keys from environment variables for security.
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
   const scrapeApiToken = import.meta.env.VITE_SCRAPE_API_TOKEN;
+
+  // Use useEffect to automatically scroll down when a new message is generated.
+  useEffect(() => {
+    if (linkedinMessage && messageOutputRef.current) {
+      messageOutputRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [linkedinMessage]);
+
+  // Use useEffect to automatically scroll to the "Generate" button after scraping is successful.
+  useEffect(() => {
+    if (jobDescription && generateMessageButtonRef.current) {
+      generateMessageButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [jobDescription]);
+
 
   // Function to handle the copy to clipboard functionality
   const handleCopy = () => {
@@ -620,10 +640,20 @@ const App = () => {
         <div className="mt-8 mb-8">
           <button
             onClick={generateMessage}
-            disabled={isLoading || isScrapingJob || !userName || !currentCompany || !companyName || !role || !recruiterName || !resume || !jobDescription}
+            disabled={isLoading || isScrapingJob || !userName || !currentCompany || !currentRole || !companyName || !role || !recruiterName || !resume || !jobDescription}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-5 px-8 rounded-2xl shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:transform-none"
           >
-            {isLoading ? 'Drafting...' : isScrapingJob ? 'Extracting Job Details...' : '✨ Generate My Outreach Message'}
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l1-2.647z"></path>
+                </svg>
+                <span>Drafting Message...</span>
+              </div>
+            ) : isScrapingJob ? (
+              'Extracting Job Details...'
+            ) : '✨ Generate My Winning Message'}
           </button>
         </div>
 
@@ -642,7 +672,7 @@ const App = () => {
           )}
 
           {linkedinMessage && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200/60 dark:border-green-700/30 p-8 rounded-3xl shadow-2xl transition-all duration-300">
+            <div ref={messageOutputRef} className="bg-green-50 dark:bg-green-900/20 border border-green-200/60 dark:border-green-700/30 p-8 rounded-3xl shadow-2xl transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-xl mr-4">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
