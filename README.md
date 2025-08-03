@@ -1,5 +1,5 @@
-LinkedIn Message Drafter
-AI-powered tool to craft professional LinkedIn outreach messages for recruiters.
+**LinkedIn Message Drafter
+AI-powered tool to craft professional LinkedIn outreach messages for recruiters.**
 
 💡 About the Project
 This is a web application designed to help you write personalized and effective LinkedIn messages to recruiters. Instead of sending a generic message, this tool uses a large language model to draft a message that highlights your relevant skills and experience based on your resume and the specific job description you're applying for.
