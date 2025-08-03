@@ -33,7 +33,7 @@ const App = () => {
       
       // Use scrape.do API for better scraping capabilities
       const scrapeApiUrl = `https://api.scrape.do/?token=${encodeURIComponent(scrapeApiToken)}&url=${encodeURIComponent(jobUrl)}`;
-      
+      console.log("scrapeApiToken", scrapeApiToken);
       const response = await fetch(scrapeApiUrl, {
         method: 'GET',
         headers: {
