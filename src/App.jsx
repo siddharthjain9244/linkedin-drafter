@@ -5,6 +5,7 @@ const App = () => {
   // State variables to hold the user inputs and the generated output.
   const [userName, setUserName] = useState('');
   const [currentCompany, setCurrentCompany] = useState('');
+  const [currentRole, setCurrentRole] = useState(''); // New state for current role
   const [companyName, setCompanyName] = useState('');
   const [role, setRole] = useState('');
   const [recruiterName, setRecruiterName] = useState('');
@@ -16,7 +17,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isScrapingJob, setIsScrapingJob] = useState(false);
   const [error, setError] = useState('');
-  const [isCopied, setIsCopied] = useState(false); // New state for copy notification
+  const [isCopied, setIsCopied] = useState(false);
 
   // Get API keys from environment variables for security.
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -30,7 +31,6 @@ const App = () => {
       setIsCopied(false);
     }, 2000); // Hide message after 2 seconds
   };
-
 
   // Function to scrape job details from a URL using scrape.do API
   const scrapeJobDetails = async () => {
@@ -275,9 +275,10 @@ const App = () => {
 
     // The prompt for the LLM, instructing it to act as a career advisor.
     const prompt = `
-      You are a career advisor. Draft a professional, concise, and engaging outreach message from ${userName} (currently working at ${currentCompany}) to ${recruiterName} at ${companyName} for the ${role} position. The message should be polite, personalized, and directly reference how the candidate's experience and skills from their resume align with the requirements of the job description. Address the recruiter by name and mention the specific company name and role in the message. Do not make up any information. If you cannot find a direct match, write a general but polite message.
+      You are a career advisor. Draft a professional, concise, and engaging outreach message from ${userName} (currently working as a ${currentRole} at ${currentCompany}) to ${recruiterName} at ${companyName} for the ${role} position. The message should be polite, personalized, and directly reference how the candidate's experience and skills from their resume align with the requirements of the job description. Address the recruiter by name and mention the specific company name and role in the message. Do not make up any information. If you cannot find a direct match, write a general but polite message.
 
       Candidate Name: ${userName}
+      Current Role: ${currentRole}
       Current Company: ${currentCompany}
       Target Company: ${companyName}
       Role/Position: ${role}
@@ -399,7 +400,7 @@ const App = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">Tell us about yourself</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="user-name-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Your Name
@@ -424,6 +425,20 @@ const App = () => {
                 value={currentCompany}
                 onChange={(e) => setCurrentCompany(e.target.value)}
                 placeholder="e.g., Apple, Amazon, Startup Inc..."
+              />
+            </div>
+            {/* New Input for Current Role */}
+            <div>
+              <label htmlFor="current-role-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Your Current Role
+              </label>
+              <input
+                id="current-role-input"
+                type="text"
+                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                value={currentRole}
+                onChange={(e) => setCurrentRole(e.target.value)}
+                placeholder="e.g., Software Developer"
               />
             </div>
           </div>
@@ -646,7 +661,6 @@ const App = () => {
                   {linkedinMessage}
                 </pre>
                 <button
-                  // onClick={() => navigator.clipboard.writeText(linkedinMessage)}
                   onClick={handleCopy}
                   className={`absolute top-4 right-4 text-white p-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 ${
                     isCopied 
