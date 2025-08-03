@@ -29,7 +29,7 @@ const App = () => {
 
     try {
       // The scrape.do API token is provided by the developer
-      const scrapeApiToken = "f17f8292f3744621a92bb83dd9f8921d9715873253d"; // Replace with your actual token
+      const scrapeApiToken = process.env.SCRAPE_API_TOKEN; // Replace with your actual token
       
       // Use scrape.do API for better scraping capabilities
       const scrapeApiUrl = `https://api.scrape.do/?token=${encodeURIComponent(scrapeApiToken)}&url=${encodeURIComponent(jobUrl)}`;
@@ -278,7 +278,7 @@ const App = () => {
     };
     
     // The API key is provided by the canvas environment.
-    const apiKey = "AIzaSyC0HbONDZt_jeveRJiNeI_gq-mftoLBTg4";
+    const apiKey = process.env.GEMINI_API_KEY;
     // The API URL for the gemini-2.5-flash-preview-05-20 model.
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
