@@ -1,11 +1,7 @@
 // src/api/generationService.js
-
+import axios from 'axios';
 /**
  * Calls the Gemini API to generate a personalized LinkedIn outreach message.
- * @param {object} params - The parameters for message generation.
- * @param {string} params.userName - The user's name.
- * @param {string} params.currentRole - The user's current role.
- * @param {string} params.currentCompany - The user's current company.
  * @param {string} params.recruiterName - The name of the recruiter.
  * @param {string} params.companyName - The name of the target company.
  * @param {string} params.role - The target role/position.
@@ -17,54 +13,57 @@
  * @returns {Promise<string|null>} The generated message text or null on failure.
  */
 export const generateMessage = async ({
-    userName,
-    currentRole,
-    currentCompany,
     recruiterName,
     companyName,
     role,
     resume,
     jobDescription,
-    geminiApiKey,
     setError,
     setIsLoading,
   }) => {
-    if (!geminiApiKey) {
-      setError('Gemini API key is missing. Please set it in your environment variables.');
-      setIsLoading(false);
-      return null;
-    }
+    // if (!geminiApiKey) {
+    //   setError('Gemini API key is missing. Please set it in your environment variables.');
+    //   setIsLoading(false);
+    //   return null;
+    // }
   
     setIsLoading(true);
     setError('');
   
-    const prompt = `
-      You are a career advisor. Draft a professional, concise, and engaging outreach message from ${userName} (currently working as a ${currentRole} at ${currentCompany}) to ${recruiterName} at ${companyName} for the ${role} position. The message should be polite, personalized, and directly reference how the candidate's experience and skills from their resume align with the requirements of the job description. Address the recruiter by name and mention the specific company name and role in the message. Do not make up any information. If you cannot find a direct match, write a general but polite message.
+    // const prompt = `
+    //   You are a career advisor. Draft a professional, concise, and engaging outreach message from ${userName} (currently working as a ${currentRole} at ${currentCompany}) to ${recruiterName} at ${companyName} for the ${role} position. The message should be polite, personalized, and directly reference how the candidate's experience and skills from their resume align with the requirements of the job description. Address the recruiter by name and mention the specific company name and role in the message. Do not make up any information. If you cannot find a direct match, write a general but polite message.
   
-      Candidate Name: ${userName}
-      Current Role: ${currentRole}
-      Current Company: ${currentCompany}
-      Target Company: ${companyName}
-      Role/Position: ${role}
-      Recruiter Name: ${recruiterName}
+    //   Candidate Name: ${userName}
+    //   Current Role: ${currentRole}
+    //   Current Company: ${currentCompany}
+    //   Target Company: ${companyName}
+    //   Role/Position: ${role}
+    //   Recruiter Name: ${recruiterName}
       
-      Candidate's Resume:
-      ${resume}
+    //   Candidate's Resume:
+    //   ${resume}
   
-      Job Description:
-      ${jobDescription}
+    //   Job Description:
+    //   ${jobDescription}
   
-      Draft the outreach message below. The message should be ready to copy and paste and should start with a proper greeting to the recruiter.
-    `;
+    //   Draft the outreach message below. The message should be ready to copy and paste and should start with a proper greeting to the recruiter.
+    // `;
   
-    const payload = {
-      contents: [{
-        role: "user",
-        parts: [{ text: prompt }]
-      }]
-    };
+    // const payload = {
+    //   contents: [{
+    //     role: "user",
+    //     parts: [{ text: prompt }]
+    //   }]
+    // };
     
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${geminiApiKey}`;
+    const apiUrl = 'https://linkedin-drafter-backend.onrender.com/api/analyseResumeForOutreach';
+    let payload = {
+      recruiterName,
+      companyName,
+      role,
+      extractedData:resume,
+      jobDescription,
+    }
   
     let retries = 0;
     const maxRetries = 5;
@@ -72,13 +71,18 @@ export const generateMessage = async ({
   
     while (retries < maxRetries) {
       try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
+        // const response = await fetch(apiUrl, {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(payload)
+        // });
+        const response = await axios.post(apiUrl, payload, {
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          timeout: 60000,
         });
-  
-        if (!response.ok) {
+
+        console.log('first',response);
+        if (response.status !== 200) {
           if (response.status === 429) {
             retries++;
             console.warn(`Retry attempt ${retries}/${maxRetries}. Retrying in ${delay}ms...`);
@@ -89,12 +93,11 @@ export const generateMessage = async ({
           throw new Error(`API error: ${response.statusText}`);
         }
   
-        const result = await response.json();
+        const result = response.data.data;
+        console.log('second',result);
         
-        if (result.candidates && result.candidates.length > 0 &&
-            result.candidates[0].content && result.candidates[0].content.parts &&
-            result.candidates[0].content.parts.length > 0) {
-          const text = result.candidates[0].content.parts[0].text;
+        if (result.outreachMessage) {
+          const text = result.outreachMessage;
           setIsLoading(false);
           return text;
         } else {

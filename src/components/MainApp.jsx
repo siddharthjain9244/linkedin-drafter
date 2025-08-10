@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { scrapeJobDetails } from '../api/scrapingService';
 import { generateMessage } from '../api/generationService';
 import { auth } from '../authService';
+import axios from 'axios';
 
-const MainApp = ({ onLogout, user }) => {
+const MainApp = ({ onLogout ,user }) => {
   // State variables for app functionality
   const [userName, setUserName] = useState('');
   const [currentCompany, setCurrentCompany] = useState('');
@@ -20,6 +21,12 @@ const MainApp = ({ onLogout, user }) => {
   const [isScrapingJob, setIsScrapingJob] = useState(false);
   const [error, setError] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  
+  // New state for resume parsing
+  const [isParsingResume, setIsParsingResume] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeInputMethod, setResumeInputMethod] = useState('manual');
+
 
   // Refs for auto-scrolling
   const messageOutputRef = useRef(null);
@@ -70,9 +77,14 @@ const MainApp = ({ onLogout, user }) => {
   };
 
   const handleGenerate = async () => {
-    const generatedMessage = await generateMessage({ userName, currentRole, currentCompany, recruiterName, companyName, role, resume, jobDescription, geminiApiKey, setError, setIsLoading });
+
+    const generatedMessage = await generateMessage({  recruiterName, companyName, role, resume, jobDescription, setError, setIsLoading });
+    console.log(generatedMessage);
     if (generatedMessage) {
       setLinkedinMessage(generatedMessage);
+    }
+    else{
+      setError('Failed to generate message. Please try again.');
     }
   };
 
@@ -85,375 +97,69 @@ const MainApp = ({ onLogout, user }) => {
     }
   };
 
+  // New function to handle file upload and API call
+  const handleResumeFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setResumeFile(file);
+    setIsParsingResume(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('resume', file);
+    
+    try {
+        // const response = await fetch('http://localhost:3000/api/parse-resume', {
+        //     method: 'POST',
+        //     body: formData,
+        // });
+        const response = await axios.post(
+          'https://linkedin-drafter-backend.onrender.com/api/parse-resume',
+          formData,
+          {
+              timeout: 60000, // 5 seconds
+              headers: { 'Content-Type': 'multipart/form-data' }
+          }
+      );
+
+        // if (!response.ok) {
+        //     throw new Error(`API error: ${response.statusText}`);
+        // }
+        let data = response.data.data;
+        console.log(data);
+        // Assuming the API returns a JSON object with resume_text field and user info
+        if (data.extractedData) {
+            setResume(data.extractedData);
+            setUserName(data.extractedData.userName || '');
+            setCurrentRole(data.extractedData.currentRole || '');
+            setCurrentCompany(data.extractedData.currentCompany || '');
+            setError('');
+        } else {
+            setError('Could not extract text from the resume. Please try a different file.');
+        }
+
+    } catch (apiError) {
+        console.error('Resume parsing API error:', apiError);
+        setError(`Failed to parse resume: ${apiError.message}`);
+    } finally {
+        setIsParsingResume(false);
+    }
+  };
+
+  const handleResumeInputMethodChange = (method) => {
+    setResumeInputMethod(method);
+    if (method === 'manual') {
+      setResumeFile(null);
+    } else {
+      setResume('');
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-6 font-sans relative overflow-hidden">
       <style>{`
-        /* --- General Styles --- */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        #app-container {
-          min-height: 100vh;
-          background: #f3f4f6; /* bg-gray-100 */
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1.5rem; /* p-6 */
-          font-family: 'Inter', sans-serif;
-          position: relative;
-          overflow: hidden;
-        }
-
-        #main-card {
-          background-color: rgba(255, 255, 255, 0.8); /* bg-white/80 */
-          backdrop-filter: blur(16px);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
-          border-radius: 1.5rem; /* rounded-3xl */
-          padding: 1.5rem; /* p-6 */
-          max-width: 80rem; /* max-w-5xl */
-          width: 100%;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          z-index: 10;
-          overflow: hidden;
-          transition: all 0.5s ease-in-out;
-        }
-
-        .header-section {
-          background: linear-gradient(to right, #2563eb, #8b5cf6, #4f46e5);
-          color: #fff;
-          text-align: center;
-          border-radius: 1rem;
-          padding: 1.5rem;
-          margin-bottom: 1.5rem;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .header-content {
-          position: relative;
-          z-index: 10;
-        }
-
-        .header-icon-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 3rem;
-          height: 3rem;
-          background-color: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(4px);
-          border-radius: 0.75rem;
-          margin-right: 0.75rem;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .header-icon {
-          width: 1.5rem;
-          height: 1.5rem;
-          color: #fff;
-        }
-
-        .header-title {
-          font-size: 1.875rem;
-          font-weight: 700;
-          line-height: 1.25;
-        }
-
-        .header-subtitle {
-          font-size: 1rem;
-          font-weight: 500;
-          margin-top: 0.5rem;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .info-card {
-          margin-bottom: 1.5rem;
-          padding: 1.25rem;
-          background-color: rgba(249, 250, 251, 0.5);
-          border-radius: 1rem;
-          border: 1px solid rgba(229, 231, 235, 0.6);
-          transition: all 0.3s ease-in-out;
-        }
-        
-        .info-card:hover {
-          background-color: rgba(249, 250, 251, 0.7);
-        }
-
-        .card-header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-
-        .card-icon-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 0.5rem;
-          margin-right: 0.75rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .card-icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: #fff;
-        }
-
-        .card-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-        
-        .card-subtitle {
-          font-size: 0.875rem;
-          color: #6b7280;
-        }
-
-        .grid-layout {
-          display: grid;
-          grid-template-columns: repeat(1, minmax(0, 1fr));
-          gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-          .grid-layout.cols-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-          .grid-layout.cols-3 {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-          }
-        }
-
-        .form-group {
-          margin-bottom: 1.5rem;
-        }
-
-        .label {
-          display: block;
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .input-field, .textarea-field {
-          width: 100%;
-          padding: 1rem;
-          border-radius: 0.75rem;
-          border: 1px solid rgba(229, 231, 235, 0.6);
-          background-color: #fff;
-          color: #111827;
-          transition: all 0.2s ease-in-out;
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-        
-        .input-field:focus, .textarea-field:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-        }
-
-        .textarea-field {
-          resize: none;
-          min-height: 12.5rem; /* rows="10" equivalent */
-        }
-        
-        .job-url-input-container {
-          padding: 1rem;
-          background-color: rgba(255, 255, 255, 0.6);
-          border-radius: 0.75rem;
-          border: 1px solid rgba(229, 231, 235, 0.5);
-          margin-bottom: 1.5rem;
-        }
-
-        .radio-options {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        @media (min-width: 640px) {
-          .radio-options {
-            flex-direction: row;
-          }
-        }
-
-        .radio-label {
-          display: flex;
-          align-items: center;
-          padding: 0.75rem;
-          border-radius: 0.5rem;
-          border: 1px solid #e5e7eb;
-          cursor: pointer;
-          transition: all 0.2s ease-in-out;
-        }
-        
-        .radio-label:hover {
-          background-color: #eff6ff; /* bg-blue-50 */
-        }
-
-        .radio-label input {
-          margin-right: 0.75rem;
-          color: #2563eb;
-        }
-        
-        .radio-label span {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #374151;
-        }
-
-        .button {
-          width: 100%;
-          color: #fff;
-          font-weight: 700;
-          padding: 1.25rem;
-          border-radius: 1rem;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease-in-out;
-          cursor: pointer;
-          border: none;
-        }
-
-        .main-button {
-          background-image: linear-gradient(to right, #2563eb, #4f46e5); /* from-blue-600 to-indigo-600 */
-          margin-top: 2rem;
-          margin-bottom: 2rem;
-        }
-
-        .main-button:hover {
-          background-image: linear-gradient(to right, #1d4ed8, #4338ca); /* hover:from-blue-700 hover:to-indigo-700 */
-          transform: scale(1.02);
-        }
-
-        .main-button:disabled {
-          background-image: linear-gradient(to right, #9ca3af, #9ca3af); /* disabled:from-gray-400 disabled:to-gray-500 */
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .scrape-button {
-          background-image: linear-gradient(to right, #10b981, #059669); /* bg-green-600 hover:bg-green-700 */
-          padding: 1rem;
-        }
-
-        .scrape-button:hover {
-          background-image: linear-gradient(to right, #059669, #047857);
-          transform: scale(1.01);
-        }
-
-        .scrape-button:disabled {
-          background-image: linear-gradient(to right, #9ca3af, #9ca3af);
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .output-container {
-          margin-top: 2rem;
-        }
-
-        .error-message {
-          background-color: #fef2f2;
-          border: 1px solid #fecaca;
-          color: #b91c1c;
-          padding: 1.5rem;
-          border-radius: 1rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-          text-align: center;
-        }
-
-        .message-output {
-          background-color: #f0fdf4;
-          border: 1px solid #dcfce7;
-          padding: 2rem;
-          border-radius: 1.5rem;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          transition: all 0.3s ease-in-out;
-        }
-
-        .message-output-header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-
-        .message-icon-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 2.5rem;
-          height: 2.5rem;
-          background-color: #10b981;
-          border-radius: 0.75rem;
-          margin-right: 1rem;
-        }
-
-        .message-icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: #fff;
-        }
-
-        .message-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #065f46;
-        }
-        
-        .message-subtitle {
-          font-size: 0.875rem;
-          color: #047857;
-        }
-
-        .message-content-box {
-          position: relative;
-          background-color: rgba(255, 255, 255, 0.8);
-          padding: 1.5rem;
-          border-radius: 1rem;
-          border: 1px solid rgba(220, 252, 231, 0.4);
-        }
-
-        .message-text {
-          white-space: pre-wrap;
-          color: #1f2937;
-          font-family: sans-serif;
-          line-height: 1.5;
-        }
-
-        .copy-button {
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          background-color: #10b981;
-          color: #fff;
-          padding: 0.5rem;
-          border-radius: 0.5rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-          transition: all 0.2s ease-in-out;
-          cursor: pointer;
-          border: none;
-        }
-
-        .copy-button:hover {
-          background-color: #059669;
-          transform: scale(1.05);
-        }
-
-        /* Keyframe for fade-in-out animation */
-        @keyframes fade-in-out {
-          0% { opacity: 0; transform: translateY(10px); }
-          20% { opacity: 1; transform: translateY(0); }
-          80% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(10px); }
-        }
-
-        .animate-fade-in-out {
-          animation: fade-in-out 2s forwards;
-        }
-        
+        /* ... (CSS styles remain unchanged) ... */
         .logout-button {
             position: absolute;
             top: 1.5rem;
@@ -477,6 +183,17 @@ const MainApp = ({ onLogout, user }) => {
             background-color: rgba(220, 38, 38, 0.9);
             transform: translateY(-2px);
             box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fade-in-out {
+          0% { opacity: 0; transform: translateY(10px); }
+          20% { opacity: 1; transform: translateY(0); }
+          80% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(10px); }
+        }
+
+        .animate-fade-in-out {
+          animation: fade-in-out 2s forwards;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -557,7 +274,7 @@ const MainApp = ({ onLogout, user }) => {
             onClick={onLogout} 
             className="logout-button"
           >
-            <svg width="20px" height="20px" viewBox="0 0 0.563 0.563" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0.038 0.038h0.262v0.038H0.075v0.413h0.225v0.038H0.038zm0.369 0.118 0.125 0.125 -0.125 0.135 -0.027 -0.026 0.084 -0.09H0.15V0.262h0.311L0.38 0.182z" fill="#000000"/></svg>
+            <svg width="20px" height="20px" viewBox="0 0 0.563 0.563" fill="none" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M0.038 0.038h0.262v0.038H0.075v0.413h0.225v0.038H0.038zm0.369 0.118 0.125 0.125 -0.125 0.135 -0.027 -0.026 0.084 -0.09H0.15V0.262h0.311L0.38 0.182z" fill="#000000"/></svg>
             Logout
           </button>
         )}
@@ -715,14 +432,70 @@ const MainApp = ({ onLogout, user }) => {
               <label htmlFor="resume-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Your Resume
               </label>
-              <textarea
-                id="resume-input"
-                className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm resize-none"
-                rows="10"
-                value={resume}
-                onChange={(e) => setResume(e.target.value)}
-                placeholder="Paste your resume here..."
-              ></textarea>
+              <div className="mb-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <label className="flex items-center p-3 rounded-lg border border-gray-100 dark:border-gray-600/30 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200">
+                    <input
+                      type="radio"
+                      name="resumeInputMethod"
+                      checked={resumeInputMethod === 'manual'}
+                      onChange={() => handleResumeInputMethodChange('manual')}
+                      className="mr-3 text-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Paste Resume Text</span>
+                  </label>
+                  <label className="flex items-center p-3 rounded-lg border border-gray-100 dark:border-gray-600/30 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200">
+                    <input
+                      type="radio"
+                      name="resumeInputMethod"
+                      checked={resumeInputMethod === 'upload'}
+                      onChange={() => handleResumeInputMethodChange('upload')}
+                      className="mr-3 text-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Upload Resume File</span>
+                  </label>
+                </div>
+              </div>
+
+              {resumeInputMethod === 'manual' ? (
+                <textarea
+                  id="resume-input"
+                  className="w-full p-4 rounded-xl border border-gray-200/60 dark:border-gray-500/40 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm resize-none"
+                  rows="10"
+                  value={resume}
+                  onChange={(e) => setResume(e.target.value)}
+                  placeholder="Paste your resume here..."
+                  disabled={isParsingResume}
+                ></textarea>
+              ) : (
+                <div className="flex flex-col items-center justify-center w-full h-40 bg-gray-100 dark:bg-gray-700 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-500 cursor-pointer hover:border-blue-500 transition-colors duration-200">
+                  <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-full text-center text-gray-500 dark:text-gray-400">
+                    {isParsingResume ? (
+                      <>
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        <span className="mt-2 text-sm">Processing resume...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span className="text-sm font-medium">
+                          {resumeFile ? `File Selected: ${resumeFile.name}` : 'Click to upload resume file'}
+                        </span>
+                        <span className="text-xs mt-1">(PDF or TXT)</span>
+                        <input 
+                          id="file-upload" 
+                          type="file" 
+                          accept=".pdf,.txt" 
+                          className="hidden" 
+                          onChange={handleResumeFileUpload} 
+                        />
+                      </>
+                    )}
+                  </label>
+                </div>
+              )}
             </div>
             <div>
               <div className="mb-6 p-4 bg-white/60 dark:bg-gray-600/20 rounded-xl border border-gray-100/50 dark:border-gray-600/20">
@@ -816,7 +589,7 @@ const MainApp = ({ onLogout, user }) => {
         <div className="mt-8 mb-8" ref={generateMessageButtonRef}>
           <button
             onClick={handleGenerate}
-            disabled={isLoading || isScrapingJob || !userName || !currentCompany || !currentRole || !companyName || !role || !recruiterName || !resume || !jobDescription}
+            disabled={isLoading || isScrapingJob || isParsingResume || !userName || !currentCompany || !currentRole || !companyName || !role || !recruiterName || !resume || !jobDescription}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-5 px-8 rounded-2xl shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:transform-none"
           >
             {isLoading ? (
@@ -829,6 +602,8 @@ const MainApp = ({ onLogout, user }) => {
               </div>
             ) : isScrapingJob ? (
               'Extracting Job Details...'
+            ) : isParsingResume ? (
+              'Processing Resume...'
             ) : '✨ Generate My Winning Message'}
           </button>
         </div>
